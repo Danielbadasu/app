@@ -1,7 +1,23 @@
 import streamlit as st
-import anthropic
+import google.generativeai as genai
 
 st.set_page_config(page_title="AI Climate Assistant", layout="wide")
+
+# ---- CONFIGURE GEMINI ----
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+model = genai.GenerativeModel(
+    model_name="gemini-2.0-flash",
+    system_instruction="""You are an expert climate data analyst and environmental scientist 
+    embedded inside a Global Climate Intelligence Dashboard. You have deep knowledge of:
+    - CO₂ emissions trends by country and sector
+    - Global temperature anomalies and climate science
+    - Renewable energy transition (solar, wind, fossil fuels)
+    - Climate vulnerability and environmental policy
+    
+    Be concise, insightful, and data-driven in your responses. 
+    When relevant, reference what users might see in the dashboard charts.
+    You can also answer general questions outside climate if asked."""
+)
 
 # ---- CUSTOM CSS ----
 st.markdown("""
@@ -77,6 +93,9 @@ st.markdown("---")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if "chat_session" not in st.session_state:
+    st.session_state.chat_session = model.start_chat(history=[])
+
 # ---- DISPLAY CHAT ----
 if st.session_state.messages:
     chat_html = '<div class="chat-container">'
@@ -108,29 +127,10 @@ if "suggested" in st.session_state and st.session_state.suggested:
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
-    client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
-
     with st.spinner("Thinking..."):
-        response = client.messages.create(
-            model="claude-opus-4-6",
-            max_tokens=1024,
-            system="""You are an expert climate data analyst and environmental scientist 
-            embedded inside a Global Climate Intelligence Dashboard. You have deep knowledge of:
-            - CO₂ emissions trends by country and sector
-            - Global temperature anomalies and climate science
-            - Renewable energy transition (solar, wind, fossil fuels)
-            - Climate vulnerability and environmental policy
-            
-            Be concise, insightful, and data-driven in your responses. 
-            When relevant, reference what users might see in the dashboard charts.
-            You can also answer general questions outside climate if asked.""",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ]
-        )
+        response = st.session_state.chat_session.send_message(user_input)
+        assistant_reply = response.text
 
-    assistant_reply = response.content[0].text
     st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
     st.rerun()
 
@@ -138,4 +138,5 @@ if user_input:
 if st.session_state.messages:
     if st.button("🗑️ Clear conversation"):
         st.session_state.messages = []
+        st.session_state.chat_session = model.start_chat(history=[])
         st.rerun()
