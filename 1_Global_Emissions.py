@@ -15,55 +15,53 @@ st.markdown("""
 }
 .kpi-card {
     flex: 1;
-    padding: 20px 25px;
+    padding: 24px 28px;
     border-radius: 16px;
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 1px solid rgba(255,255,255,0.08);
     position: relative;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
-.kpi-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
+.kpi-card.green {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
 }
-.kpi-card.green::before  { background: linear-gradient(90deg, #11998e, #38ef7d); box-shadow: 0 0 20px #11998e; }
-.kpi-card.purple::before { background: linear-gradient(90deg, #a855f7, #6366f1); box-shadow: 0 0 20px #a855f7; }
-.kpi-card.cyan::before   { background: linear-gradient(90deg, #06b6d4, #0ea5e9); box-shadow: 0 0 20px #06b6d4; }
+.kpi-card.purple {
+    background: linear-gradient(135deg, #6a11cb, #a855f7);
+}
+.kpi-card.cyan {
+    background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+}
 .kpi-label {
     font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.45);
+    color: rgba(255,255,255,0.75);
     margin-bottom: 10px;
+    font-weight: 600;
 }
 .kpi-value {
     font-size: 38px;
     font-weight: 800;
     letter-spacing: -1px;
     margin-bottom: 6px;
+    color: #ffffff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
-.kpi-card.green  .kpi-value { color: #38ef7d; }
-.kpi-card.purple .kpi-value { color: #a855f7; }
-.kpi-card.cyan   .kpi-value { color: #06b6d4; }
 .kpi-sub {
     font-size: 12px;
-    color: rgba(255,255,255,0.35);
+    color: rgba(255,255,255,0.65);
 }
 .kpi-icon {
     position: absolute;
     top: 18px; right: 20px;
-    font-size: 28px;
-    opacity: 0.15;
+    font-size: 42px;
+    opacity: 0.25;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ---- TITLE ----
 st.title("🌍 Global Climate Intelligence Dashboard")
-st.markdown("Exploring temperature anomalies, CO₂ emissions, and climate trends using public data.")
+st.markdown("Exploring CO₂ emissions and climate trends using public data.")
 
 # ---- LOAD DATA ----
 @st.cache_data
@@ -79,21 +77,21 @@ st.sidebar.header("Filters")
 
 countries = df['country'].dropna().unique().tolist()
 selected_countries = st.sidebar.multiselect(
-    "Select Countries", 
-    options=countries, 
+    "Select Countries",
+    options=countries,
     default=["United States", "China", "India", "United Kingdom", "Germany"]
 )
 
 year_range = st.sidebar.slider(
-    "Select Year Range", 
-    min_value=int(df['year'].min()), 
-    max_value=int(df['year'].max()), 
+    "Select Year Range",
+    min_value=int(df['year'].min()),
+    max_value=int(df['year'].max()),
     value=(1990, 2022)
 )
 
 # ---- FILTER DATA ----
 filtered_df = df[
-    (df['country'].isin(selected_countries)) & 
+    (df['country'].isin(selected_countries)) &
     (df['year'].between(year_range[0], year_range[1]))
 ]
 
@@ -131,9 +129,9 @@ st.markdown("---")
 # ---- CO2 LINE CHART ----
 st.subheader("CO₂ Emissions Over Time (per country)")
 fig1 = px.line(
-    filtered_df, 
-    x="year", 
-    y="co2", 
+    filtered_df,
+    x="year",
+    y="co2",
     color="country",
     labels={"co2": "CO₂ Emissions (million tonnes)", "year": "Year"},
     template="plotly_dark"
@@ -143,9 +141,9 @@ st.plotly_chart(fig1, use_container_width=True)
 # ---- CO2 PER CAPITA ----
 st.subheader("CO₂ Emissions Per Capita")
 fig2 = px.line(
-    filtered_df, 
-    x="year", 
-    y="co2_per_capita", 
+    filtered_df,
+    x="year",
+    y="co2_per_capita",
     color="country",
     labels={"co2_per_capita": "CO₂ Per Capita (tonnes)", "year": "Year"},
     template="plotly_dark"
