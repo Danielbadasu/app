@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from chatbot_widget import render_ai_banner
 
 st.set_page_config(page_title="Renewable Energy Transition", layout="wide")
 
@@ -96,7 +97,6 @@ filtered_df = df[
 
 # ---- KPI VALUES ----
 latest_year_df = filtered_df[filtered_df['year'] == filtered_df['year'].max()]
-
 total_solar = filtered_df['solar_electricity'].sum()
 top_renewable_country = (
     latest_year_df.groupby('country')['renewables_share_energy']
@@ -129,6 +129,9 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# ---- AI BANNER ----
+render_ai_banner("Renewable Energy")
+
 st.markdown("---")
 
 # ---- RENEWABLE SHARE OVER TIME ----
@@ -138,17 +141,13 @@ fig1 = px.line(
     x="year",
     y="renewables_share_energy",
     color="country",
-    labels={
-        "renewables_share_energy": "Renewables Share (%)",
-        "year": "Year"
-    },
+    labels={"renewables_share_energy": "Renewables Share (%)", "year": "Year"},
     template="plotly_dark"
 )
 st.plotly_chart(fig1, use_container_width=True)
 
 # ---- SOLAR VS WIND VS FOSSIL ----
 st.subheader("Solar vs Wind vs Fossil Fuel Electricity")
-
 energy_cols = ['year', 'country', 'solar_electricity', 'wind_electricity', 'fossil_electricity']
 energy_df = filtered_df[energy_cols].dropna()
 energy_melted = energy_df.melt(
@@ -162,8 +161,6 @@ energy_melted['Source'] = energy_melted['Source'].replace({
     'wind_electricity': 'Wind',
     'fossil_electricity': 'Fossil Fuels'
 })
-
-# sum across selected countries per year
 grouped = energy_melted.groupby(['year', 'Source'])['TWh'].sum().reset_index()
 
 fig2 = px.area(
@@ -186,7 +183,6 @@ st.subheader("Renewables Share by Country (Latest Year)")
 bar_df = latest_year_df[['country', 'renewables_share_energy']].dropna().sort_values(
     'renewables_share_energy', ascending=True
 )
-
 fig3 = px.bar(
     bar_df,
     x="renewables_share_energy",

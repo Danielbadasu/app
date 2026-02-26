@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from chatbot_widget import render_ai_banner
 
 st.set_page_config(page_title="Temperature Anomalies", layout="wide")
 
@@ -71,13 +72,31 @@ def load_temp_data():
 
 df = load_temp_data()
 
-# ---- SIDEBAR ----
+# ---- SIDEBAR FILTERS ----
 st.sidebar.header("Filters")
+
 entities = df['entity'].unique().tolist()
-selected_entity = st.sidebar.selectbox("Select Region", options=entities)
+selected_entity = st.sidebar.selectbox(
+    "Select Region",
+    options=entities
+)
+
+year_range = st.sidebar.slider(
+    "Select Year Range",
+    min_value=int(df['year'].min()),
+    max_value=int(df['year'].max()),
+    value=(int(df['year'].min()), int(df['year'].max()))
+)
+
+st.sidebar.markdown("---")
+st.sidebar.markdown(f"**📊 Showing:** {year_range[0]} – {year_range[1]}")
+st.sidebar.markdown(f"**🌍 Region:** {selected_entity}")
 
 # ---- FILTER ----
-filtered_df = df[df['entity'] == selected_entity]
+filtered_df = df[
+    (df['entity'] == selected_entity) &
+    (df['year'].between(year_range[0], year_range[1]))
+]
 
 # ---- KPI VALUES ----
 latest = filtered_df[filtered_df['year'] == filtered_df['year'].max()].iloc[0]
@@ -103,10 +122,13 @@ st.markdown(f"""
         <div class="kpi-icon">📊</div>
         <div class="kpi-label">Average Anomaly</div>
         <div class="kpi-value">{avg_anomaly:.3f}°C</div>
-        <div class="kpi-sub">Across all recorded years</div>
+        <div class="kpi-sub">Across selected year range</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+# ---- AI BANNER ----
+render_ai_banner("Temperature Anomalies")
 
 st.markdown("---")
 
@@ -120,7 +142,13 @@ fig1 = px.line(
     template="plotly_dark",
     color_discrete_sequence=["#EF553B"]
 )
-fig1.add_hline(y=0, line_dash="dash", line_color="white", opacity=0.4, annotation_text="Baseline")
+fig1.add_hline(
+    y=0,
+    line_dash="dash",
+    line_color="white",
+    opacity=0.4,
+    annotation_text="Baseline"
+)
 st.plotly_chart(fig1, use_container_width=True)
 
 # ---- DECADE BAR CHART ----

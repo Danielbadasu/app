@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from chatbot_widget import render_ai_banner
 
 # ---- PAGE CONFIG ----
 st.set_page_config(page_title="Global Climate Dashboard", layout="wide")
@@ -123,6 +124,9 @@ st.markdown(f"""
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+# ---- AI BANNER ----
+render_ai_banner("CO₂ Emissions")
 
 st.markdown("---")
 
