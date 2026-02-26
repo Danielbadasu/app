@@ -34,32 +34,26 @@ def render_ai_banner(page_context: str):
     .ai-banner-title {{
         font-size: 14px;
         font-weight: 700;
-        color: #ffffff;
+        color: #ffffff !important;
         letter-spacing: 0.3px;
     }}
     .ai-banner-sub {{
         font-size: 12px;
-        color: rgba(255,255,255,0.5);
+        color: rgba(255,255,255,0.7) !important;
     }}
     .ai-banner-btn {{
-        background: transparent;
-        color: #a855f7;
+        background: rgba(255,255,255,0.1);
+        color: #ffffff !important;
         padding: 10px 20px;
         border-radius: 10px;
         font-size: 13px;
         font-weight: 700;
-        text-decoration: none;
+        text-decoration: none !important;
         white-space: nowrap;
         letter-spacing: 0.3px;
-        border: 2px solid #a855f7;
-        box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+        border: 2px solid #ffffff;
+        box-shadow: 0 0 15px rgba(255,255,255,0.15);
         cursor: pointer;
-        transition: all 0.2s ease;
-    }}
-    .ai-banner-btn:hover {{
-        background: rgba(168, 85, 247, 0.15);
-        color: #ffffff;
-        text-decoration: none;
     }}
     </style>
 

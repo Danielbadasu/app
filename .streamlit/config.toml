@@ -1,0 +1,10 @@
+[theme]
+base = "dark"
+
+[browser]
+gatherUsageStats = false
+```
+
+Save it and restart your app:
+```
+python -m streamlit run "🌍_Global_Emissions.py"
