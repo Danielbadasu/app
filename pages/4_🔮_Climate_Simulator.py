@@ -7,15 +7,9 @@ from chatbot_widget import render_ai_banner
 
 st.set_page_config(page_title="Climate Scenario Simulator", layout="wide")
 
-# ---- HIDE GITHUB ICON ----
+# ---- CUSTOM CSS ----
 st.markdown("""
 <style>
-#MainMenu {visibility: hidden;}
-header {visibility: hidden;}
-.stDeployButton {display: none;}
-a[href*="github"] {display: none !important;}
-button[title="View app on GitHub"] {display: none !important;}
-button[title="GitHub"] {display: none !important;}
 .kpi-container {
     display: flex;
     gap: 20px;
@@ -118,21 +112,18 @@ scenario_config = {
         "temp_rate": 0.010,
         "color": "#38ef7d",
         "label": "Aggressive climate action — 3% annual emissions reduction",
-        "temp_rise": 1.5
     },
     "🟡 Moderate": {
         "co2_rate": -0.01,
         "temp_rate": 0.018,
         "color": "#ffd200",
         "label": "Current pace — 1% annual emissions reduction",
-        "temp_rise": 2.5
     },
     "🔴 Pessimistic": {
         "co2_rate": 0.02,
         "temp_rate": 0.030,
         "color": "#ff416c",
         "label": "Fossil fuel dependency grows — 2% annual emissions increase",
-        "temp_rise": 4.0
     }
 }
 
@@ -184,8 +175,8 @@ temp_values_proj = [None if y <= 2022
 
 # ---- KPI VALUES ----
 total_hist_co2 = hist_df[hist_df['year'] == 2022]['co2'].sum()
-total_proj_co2 = proj_df[proj_df['year'] == target_year]['co2'].sum()
-co2_change_pct = ((total_proj_co2 - total_hist_co2) / total_hist_co2) * 100
+total_proj_co2 = proj_df[proj_df['year'] == target_year]['co2'].sum() if not proj_df.empty else 0
+co2_change_pct = ((total_proj_co2 - total_hist_co2) / total_hist_co2) * 100 if total_hist_co2 > 0 else 0
 proj_temp_rise = base_temp * ((1 + config["temp_rate"]) ** years_ahead)
 co2_card = "green" if co2_change_pct < 0 else "red"
 temp_card = "green" if proj_temp_rise < 1.5 else "orange" if proj_temp_rise < 2.5 else "red"
@@ -244,7 +235,6 @@ for country in selected_countries:
         (combined_df['type'] == 'Projected')
     ]
 
-    # historical solid line
     fig1.add_trace(go.Scatter(
         x=country_hist['year'],
         y=country_hist['co2'],
@@ -253,7 +243,6 @@ for country in selected_countries:
         line=dict(width=2)
     ))
 
-    # projected dashed line
     fig1.add_trace(go.Scatter(
         x=country_proj['year'],
         y=country_proj['co2'],
@@ -305,7 +294,6 @@ fig2.add_trace(go.Scatter(
     line=dict(color=config['color'], width=2, dash='dash')
 ))
 
-# Paris agreement line
 fig2.add_hline(
     y=1.5,
     line_dash="dash",
@@ -384,10 +372,3 @@ st.download_button(
     file_name=f"climate_simulation_{scenario}_{target_year}.csv",
     mime="text/csv"
 )
-```
-
-Then push to GitHub:
-```
-git add .
-git commit -m "Add Climate Scenario Simulator page"
-git push

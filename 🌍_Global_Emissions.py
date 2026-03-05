@@ -6,18 +6,6 @@ from chatbot_widget import render_ai_banner
 # ---- PAGE CONFIG ----
 st.set_page_config(page_title="Global Climate Dashboard", layout="wide")
 
-# ---- HIDE GITHUB ICON & STREAMLIT MENU ----
-st.markdown("""
-<style>
-#MainMenu {visibility: hidden;}
-header {visibility: hidden;}
-.stDeployButton {display: none;}
-a[href*="github"] {display: none !important;}
-button[title="View app on GitHub"] {display: none !important;}
-button[title="GitHub"] {display: none !important;}
-</style>
-""", unsafe_allow_html=True)
-
 # ---- CUSTOM CSS ----
 st.markdown("""
 <style>
