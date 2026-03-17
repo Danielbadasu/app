@@ -73,10 +73,20 @@ def load_data():
 
 df = load_data()
 
+# ---- EXCLUDE AGGREGATES ----
+exclude = [
+    'World', 'Asia', 'Europe', 'Africa', 'Oceania',
+    'North America', 'South America', 'Antarctic',
+    'European Union (27)', 'High-income countries',
+    'Low-income countries', 'Upper-middle-income countries',
+    'Lower-middle-income countries', 'International transport'
+]
+countries_df = df[~df['country'].isin(exclude)]
+
 # ---- SIDEBAR FILTERS ----
 st.sidebar.header("Filters")
 
-countries = df['country'].dropna().unique().tolist()
+countries = sorted(countries_df['country'].dropna().unique().tolist())
 selected_countries = st.sidebar.multiselect(
     "Select Countries",
     options=countries,
@@ -91,10 +101,15 @@ year_range = st.sidebar.slider(
 )
 
 # ---- FILTER DATA ----
-filtered_df = df[
-    (df['country'].isin(selected_countries)) &
-    (df['year'].between(year_range[0], year_range[1]))
+filtered_df = countries_df[
+    (countries_df['country'].isin(selected_countries)) &
+    (countries_df['year'].between(year_range[0], year_range[1]))
 ]
+
+# ---- SAFETY CHECK ----
+if filtered_df.empty:
+    st.warning("⚠️ No data found for the selected filters. Please adjust your selection.")
+    st.stop()
 
 # ---- KPI VALUES ----
 total_co2 = filtered_df['co2'].sum()

@@ -72,14 +72,51 @@ def load_temp_data():
 
 df = load_temp_data()
 
+# ---- CONTINENT TO ENTITY MAPPING ----
+continent_map = {
+    "Global": ["World"],
+    "Northern Hemisphere": ["Northern Hemisphere"],
+    "Southern Hemisphere": ["Southern Hemisphere"],
+    "Africa": ["Africa"],
+    "Asia": ["Asia"],
+    "Europe": ["Europe"],
+    "North America": ["North America"],
+    "South America": ["South America"],
+    "Oceania": ["Oceania"]
+}
+
+available_entities = df['entity'].unique().tolist()
+
 # ---- SIDEBAR FILTERS ----
 st.sidebar.header("Filters")
 
-entities = df['entity'].unique().tolist()
-selected_entity = st.sidebar.selectbox(
-    "Select Region",
-    options=entities
+# Continent filter
+available_continents = ["All"] + [c for c in continent_map.keys()
+                                   if any(e in available_entities
+                                   for e in continent_map[c])]
+selected_continent = st.sidebar.selectbox(
+    "Filter by Continent / Region",
+    options=available_continents
 )
+
+# Country/entity filter based on continent
+if selected_continent == "All":
+    entity_options = sorted(available_entities)
+else:
+    entity_options = [e for e in continent_map.get(selected_continent, [])
+                      if e in available_entities]
+    if not entity_options:
+        entity_options = sorted(available_entities)
+
+selected_entities = st.sidebar.multiselect(
+    "Select Region(s)",
+    options=entity_options,
+    default=entity_options[:1]
+)
+
+# Fallback if nothing selected
+if not selected_entities:
+    selected_entities = entity_options[:1]
 
 year_range = st.sidebar.slider(
     "Select Year Range",
@@ -90,16 +127,21 @@ year_range = st.sidebar.slider(
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"**📊 Showing:** {year_range[0]} – {year_range[1]}")
-st.sidebar.markdown(f"**🌍 Region:** {selected_entity}")
+st.sidebar.markdown(f"**🌍 Region(s):** {', '.join(selected_entities)}")
 
 # ---- FILTER ----
 filtered_df = df[
-    (df['entity'] == selected_entity) &
+    (df['entity'].isin(selected_entities)) &
     (df['year'].between(year_range[0], year_range[1]))
 ]
 
+if filtered_df.empty:
+    st.warning("⚠️ No data found for the selected filters. Please adjust your selection.")
+    st.stop()
+
 # ---- KPI VALUES ----
-latest = filtered_df[filtered_df['year'] == filtered_df['year'].max()].iloc[0]
+latest_year = filtered_df['year'].max()
+latest = filtered_df[filtered_df['year'] == latest_year].iloc[0]
 max_anomaly = filtered_df['anomaly'].max()
 avg_anomaly = filtered_df['anomaly'].mean()
 
@@ -138,9 +180,10 @@ fig1 = px.line(
     filtered_df,
     x="year",
     y="anomaly",
-    labels={"anomaly": "Temperature Anomaly (°C)", "year": "Year"},
+    color="entity",
+    labels={"anomaly": "Temperature Anomaly (°C)", "year": "Year", "entity": "Region"},
     template="plotly_dark",
-    color_discrete_sequence=["#EF553B"]
+    color_discrete_sequence=["#EF553B", "#636EFA", "#00CC96", "#AB63FA", "#FFA15A"]
 )
 fig1.add_hline(
     y=0,
@@ -153,12 +196,12 @@ st.plotly_chart(fig1, use_container_width=True)
 
 # ---- DECADE BAR CHART ----
 st.subheader("Average Anomaly by Decade")
-filtered_df = filtered_df.copy()
-filtered_df['decade'] = (filtered_df['year'] // 10) * 10
-decade_df = filtered_df.groupby('decade')['anomaly'].mean().reset_index()
+decade_df = filtered_df.copy()
+decade_df['decade'] = (decade_df['year'] // 10) * 10
+decade_grouped = decade_df.groupby('decade')['anomaly'].mean().reset_index()
 
 fig2 = px.bar(
-    decade_df,
+    decade_grouped,
     x="decade",
     y="anomaly",
     labels={"anomaly": "Avg Anomaly (°C)", "decade": "Decade"},
@@ -167,6 +210,16 @@ fig2 = px.bar(
     color_continuous_scale="RdYlBu_r"
 )
 st.plotly_chart(fig2, use_container_width=True)
+
+# ---- DOWNLOAD DATA ----
+st.markdown("---")
+csv = filtered_df.to_csv(index=False).encode('utf-8')
+st.download_button(
+    label="📥 Download Filtered Data as CSV",
+    data=csv,
+    file_name="temperature_anomaly_data.csv",
+    mime="text/csv"
+)
 
 # ---- RAW DATA ----
 if st.checkbox("Show raw data"):
