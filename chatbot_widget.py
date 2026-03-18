@@ -83,12 +83,13 @@ def render_disclaimer(page_context: str = ""):
             📋 Data Sources & Disclaimer
         </p>
         <p style="font-size:12px; color:rgba(255,255,255,0.55); margin:0; line-height:1.7;">
-            Data sourced from <a href="https://ourworldindata.org" target="_blank" style="color:#a855f7;">Our World in Data (OWID)</a> 
-            and the <a href="https://www.metoffice.gov.uk/hadobs/hadcrut5/" target="_blank" style="color:#a855f7;">Hadley Centre (HadCRUT)</a>, 
+            Data sourced from <a href="https://ourworldindata.org" target="_blank" style="color:#a855f7;">Our World in Data (OWID)</a>,
+            the <a href="https://www.metoffice.gov.uk/hadobs/hadcrut5/" target="_blank" style="color:#a855f7;">Hadley Centre (HadCRUT)</a>,
+            and <a href="https://berkeleyearth.org" target="_blank" style="color:#a855f7;">Berkeley Earth</a>,
             made available under open licences for public use. {extra}
-            This dashboard is intended for <strong>informational and educational purposes only</strong> 
-            and does not constitute professional, legal, or commercial advice. 
-            Users are encouraged to verify data independently before making decisions. 
+            This dashboard is intended for <strong>informational and educational purposes only</strong>
+            and does not constitute professional, legal, or commercial advice.
+            Users are encouraged to verify data independently before making decisions.
             The developer assumes no liability for the use or interpretation of this information.
         </p>
     </div>
