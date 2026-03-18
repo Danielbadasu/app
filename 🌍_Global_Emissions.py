@@ -74,12 +74,12 @@ def load_data():
 df = load_data()
 
 # ---- SMART COUNTRY FILTER ----
-# Only keep rows where iso_code is a valid 3-letter country code
-# This eliminates ALL aggregates, regions, income groups automatically
 @st.cache_data
 def get_real_countries(df):
-    real = df[df['iso_code'].notna() & (df['iso_code'].str.len() == 3) & (~df['iso_code'].str.startswith('OWID'))]
-    return sorted(real['country'].dropna().unique().tolist())
+    filtered = df[df['iso_code'].notna()]
+    filtered = filtered[filtered['iso_code'].str.len() == 3]
+    filtered = filtered[filtered['iso_code'].str.startswith('OWID') == False]
+    return sorted(filtered['country'].dropna().unique().tolist())
 
 real_countries = get_real_countries(df)
 countries_df = df[df['country'].isin(real_countries)]
@@ -184,8 +184,7 @@ if st.checkbox("Show raw data"):
     st.dataframe(filtered_df[['country', 'year', 'co2', 'co2_per_capita']].reset_index(drop=True))
 
 # ---- DISCLAIMER ----
-render_disclaimer("CO₂ Emissions")  # change context per page
+render_disclaimer("CO₂ Emissions")
 
 # ---- SIDEBAR CHAT ----
 render_sidebar_chat("CO₂ Emissions")
-
