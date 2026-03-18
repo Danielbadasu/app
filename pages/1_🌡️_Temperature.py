@@ -60,63 +60,86 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("🌡️ Global Temperature Anomalies")
-st.markdown("How much warmer is the Earth compared to the 20th century baseline?")
+st.markdown("Tracking how surface temperatures have changed country by country since 1961.")
 
 # ---- LOAD DATA ----
 @st.cache_data
 def load_temp_data():
-    url = "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/Global%20average%20temperature%20anomaly%20-%20Hadley%20Centre/Global%20average%20temperature%20anomaly%20-%20Hadley%20Centre.csv"
+    url = "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/Annual%20average%20surface%20temperatures%20by%20country/Annual%20average%20surface%20temperatures%20by%20country.csv"
     df = pd.read_csv(url)
-    df.columns = ["entity", "year", "anomaly"]
+    df.columns = [c.strip() for c in df.columns]
+    df = df.rename(columns={
+        df.columns[0]: "country",
+        df.columns[1]: "year",
+        df.columns[2]: "temperature"
+    })
     return df
 
 df = load_temp_data()
 
-# ---- CONTINENT TO ENTITY MAPPING ----
+# ---- CONTINENT MAPPING ----
 continent_map = {
-    "Global": ["World"],
-    "Northern Hemisphere": ["Northern Hemisphere"],
-    "Southern Hemisphere": ["Southern Hemisphere"],
-    "Africa": ["Africa"],
-    "Asia": ["Asia"],
-    "Europe": ["Europe"],
-    "North America": ["North America"],
-    "South America": ["South America"],
-    "Oceania": ["Oceania"]
+    'Africa': ['Nigeria', 'Ethiopia', 'Kenya', 'Ghana', 'Tanzania', 'Uganda',
+               'Mozambique', 'Madagascar', 'Cameroon', 'Angola', 'Niger',
+               'Burkina Faso', 'Mali', 'Malawi', 'Zambia', 'Chad', 'Somalia',
+               'Zimbabwe', 'Guinea', 'Rwanda', 'Benin', 'Burundi', 'Tunisia',
+               'South Africa', 'Egypt', 'Algeria', 'Morocco', 'Sudan',
+               'Democratic Republic of Congo', 'Ivory Coast', 'Senegal'],
+    'Asia': ['China', 'India', 'Indonesia', 'Pakistan', 'Bangladesh',
+             'Japan', 'Philippines', 'Vietnam', 'Iran', 'Thailand',
+             'Myanmar', 'South Korea', 'Iraq', 'Afghanistan', 'Saudi Arabia',
+             'Uzbekistan', 'Malaysia', 'Yemen', 'Nepal', 'Sri Lanka',
+             'Cambodia', 'Jordan', 'Azerbaijan', 'Tajikistan', 'Israel',
+             'Laos', 'Singapore', 'Kuwait', 'Qatar', 'United Arab Emirates'],
+    'Europe': ['Russia', 'Germany', 'United Kingdom', 'France', 'Italy',
+               'Spain', 'Ukraine', 'Poland', 'Romania', 'Netherlands',
+               'Belgium', 'Sweden', 'Czech Republic', 'Greece', 'Portugal',
+               'Hungary', 'Belarus', 'Austria', 'Switzerland', 'Bulgaria',
+               'Denmark', 'Finland', 'Norway', 'Slovakia', 'Ireland',
+               'Croatia', 'Bosnia and Herzegovina', 'Albania', 'Lithuania'],
+    'Americas': ['United States', 'Brazil', 'Mexico', 'Colombia', 'Argentina',
+                 'Canada', 'Peru', 'Venezuela', 'Chile', 'Ecuador',
+                 'Bolivia', 'Paraguay', 'Uruguay', 'Cuba', 'Haiti',
+                 'Dominican Republic', 'Honduras', 'Guatemala', 'El Salvador',
+                 'Nicaragua', 'Costa Rica', 'Panama', 'Jamaica', 'Trinidad and Tobago'],
+    'Oceania': ['Australia', 'Papua New Guinea', 'New Zealand', 'Fiji',
+                'Solomon Islands', 'Vanuatu', 'Samoa', 'Kiribati', 'Tonga']
 }
 
-available_entities = df['entity'].unique().tolist()
+def get_continent(country):
+    for continent, countries in continent_map.items():
+        if country in countries:
+            return continent
+    return 'Other'
+
+df['continent'] = df['country'].apply(get_continent)
+
+available_countries = sorted(df['country'].dropna().unique().tolist())
+available_continents = ['All'] + sorted(df['continent'].unique().tolist())
 
 # ---- SIDEBAR FILTERS ----
 st.sidebar.header("Filters")
 
-# Continent filter
-available_continents = ["All"] + [c for c in continent_map.keys()
-                                   if any(e in available_entities
-                                   for e in continent_map[c])]
 selected_continent = st.sidebar.selectbox(
-    "Filter by Continent / Region",
+    "Filter by Continent",
     options=available_continents
 )
 
-# Country/entity filter based on continent
-if selected_continent == "All":
-    entity_options = sorted(available_entities)
+if selected_continent == 'All':
+    country_options = available_countries
 else:
-    entity_options = [e for e in continent_map.get(selected_continent, [])
-                      if e in available_entities]
-    if not entity_options:
-        entity_options = sorted(available_entities)
+    country_options = sorted(
+        df[df['continent'] == selected_continent]['country'].unique().tolist()
+    )
 
-selected_entities = st.sidebar.multiselect(
-    "Select Region(s)",
-    options=entity_options,
-    default=entity_options[:1]
+selected_countries = st.sidebar.multiselect(
+    "Select Countries",
+    options=country_options,
+    default=country_options[:3] if len(country_options) >= 3 else country_options
 )
 
-# Fallback if nothing selected
-if not selected_entities:
-    selected_entities = entity_options[:1]
+if not selected_countries:
+    selected_countries = country_options[:3]
 
 year_range = st.sidebar.slider(
     "Select Year Range",
@@ -127,11 +150,11 @@ year_range = st.sidebar.slider(
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"**📊 Showing:** {year_range[0]} – {year_range[1]}")
-st.sidebar.markdown(f"**🌍 Region(s):** {', '.join(selected_entities)}")
+st.sidebar.markdown(f"**🌍 Continent:** {selected_continent}")
 
 # ---- FILTER ----
 filtered_df = df[
-    (df['entity'].isin(selected_entities)) &
+    (df['country'].isin(selected_countries)) &
     (df['year'].between(year_range[0], year_range[1]))
 ]
 
@@ -141,30 +164,32 @@ if filtered_df.empty:
 
 # ---- KPI VALUES ----
 latest_year = filtered_df['year'].max()
-latest = filtered_df[filtered_df['year'] == latest_year].iloc[0]
-max_anomaly = filtered_df['anomaly'].max()
-avg_anomaly = filtered_df['anomaly'].mean()
+latest_df = filtered_df[filtered_df['year'] == latest_year]
+avg_latest = latest_df['temperature'].mean()
+max_temp = filtered_df['temperature'].max()
+max_temp_country = filtered_df.loc[filtered_df['temperature'].idxmax(), 'country']
+avg_temp = filtered_df['temperature'].mean()
 
 # ---- KPI CARDS ----
 st.markdown(f"""
 <div class="kpi-container">
     <div class="kpi-card red">
         <div class="kpi-icon">🌡️</div>
-        <div class="kpi-label">Latest Anomaly</div>
-        <div class="kpi-value">{latest['anomaly']:.3f}°C</div>
-        <div class="kpi-sub">Recorded in {int(latest['year'])}</div>
+        <div class="kpi-label">Latest Avg Temperature</div>
+        <div class="kpi-value">{avg_latest:.2f}°C</div>
+        <div class="kpi-sub">Across selected countries in {int(latest_year)}</div>
     </div>
     <div class="kpi-card orange">
         <div class="kpi-icon">🔥</div>
-        <div class="kpi-label">Highest Ever Recorded</div>
-        <div class="kpi-value">{max_anomaly:.3f}°C</div>
-        <div class="kpi-sub">All time peak anomaly</div>
+        <div class="kpi-label">Highest Recorded</div>
+        <div class="kpi-value">{max_temp:.2f}°C</div>
+        <div class="kpi-sub">{max_temp_country} — all time peak</div>
     </div>
     <div class="kpi-card blue">
         <div class="kpi-icon">📊</div>
-        <div class="kpi-label">Average Anomaly</div>
-        <div class="kpi-value">{avg_anomaly:.3f}°C</div>
-        <div class="kpi-sub">Across selected year range</div>
+        <div class="kpi-label">Average Temperature</div>
+        <div class="kpi-value">{avg_temp:.2f}°C</div>
+        <div class="kpi-sub">Across selected countries & period</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -175,38 +200,30 @@ render_ai_banner("Temperature Anomalies")
 st.markdown("---")
 
 # ---- LINE CHART ----
-st.subheader("Temperature Anomaly Over Time")
+st.subheader("Average Surface Temperature Over Time")
 fig1 = px.line(
     filtered_df,
     x="year",
-    y="anomaly",
-    color="entity",
-    labels={"anomaly": "Temperature Anomaly (°C)", "year": "Year", "entity": "Region"},
-    template="plotly_dark",
-    color_discrete_sequence=["#EF553B", "#636EFA", "#00CC96", "#AB63FA", "#FFA15A"]
-)
-fig1.add_hline(
-    y=0,
-    line_dash="dash",
-    line_color="white",
-    opacity=0.4,
-    annotation_text="Baseline"
+    y="temperature",
+    color="country",
+    labels={"temperature": "Avg Surface Temp (°C)", "year": "Year", "country": "Country"},
+    template="plotly_dark"
 )
 st.plotly_chart(fig1, use_container_width=True)
 
 # ---- DECADE BAR CHART ----
-st.subheader("Average Anomaly by Decade")
+st.subheader("Average Temperature by Decade")
 decade_df = filtered_df.copy()
 decade_df['decade'] = (decade_df['year'] // 10) * 10
-decade_grouped = decade_df.groupby('decade')['anomaly'].mean().reset_index()
+decade_grouped = decade_df.groupby('decade')['temperature'].mean().reset_index()
 
 fig2 = px.bar(
     decade_grouped,
     x="decade",
-    y="anomaly",
-    labels={"anomaly": "Avg Anomaly (°C)", "decade": "Decade"},
+    y="temperature",
+    labels={"temperature": "Avg Temp (°C)", "decade": "Decade"},
     template="plotly_dark",
-    color="anomaly",
+    color="temperature",
     color_continuous_scale="RdYlBu_r"
 )
 st.plotly_chart(fig2, use_container_width=True)
@@ -217,19 +234,16 @@ csv = filtered_df.to_csv(index=False).encode('utf-8')
 st.download_button(
     label="📥 Download Filtered Data as CSV",
     data=csv,
-    file_name="temperature_anomaly_data.csv",
+    file_name="temperature_data.csv",
     mime="text/csv"
 )
 
 # ---- RAW DATA ----
 if st.checkbox("Show raw data"):
-    st.dataframe(filtered_df[['entity', 'year', 'anomaly']].reset_index(drop=True))
-
-from chatbot_widget import render_ai_banner, render_sidebar_chat
+    st.dataframe(filtered_df[['country', 'year', 'temperature']].reset_index(drop=True))
 
 # ---- DISCLAIMER ----
-render_disclaimer("Temperature Anomalies")  # change context per page
+render_disclaimer("Temperature Anomalies")
 
-# at the very bottom of each page:
-render_sidebar_chat("Temperature Anomalies")  # change context per page
-
+# ---- SIDEBAR CHAT ----
+render_sidebar_chat("Temperature Anomalies")
