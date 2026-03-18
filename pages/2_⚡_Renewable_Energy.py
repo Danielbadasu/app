@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from chatbot_widget import render_ai_banner
+from chatbot_widget import render_ai_banner, render_sidebar_chat, render_disclaimer
 
 st.set_page_config(page_title="Renewable Energy Transition", layout="wide")
 
@@ -204,5 +204,9 @@ if st.checkbox("Show raw data"):
 
 from chatbot_widget import render_ai_banner, render_sidebar_chat
 
+# ---- DISCLAIMER ----
+render_disclaimer("Renewable Energy")  # change context per page
+
 # at the very bottom of each page:
 render_sidebar_chat("Renewable Energy")  # change context per page
+

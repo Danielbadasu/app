@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
-from chatbot_widget import render_ai_banner
+from chatbot_widget import render_ai_banner, render_sidebar_chat, render_disclaimer
 
 st.set_page_config(page_title="Climate Scenario Simulator", layout="wide")
 
@@ -374,6 +374,9 @@ st.download_button(
 )
 
 from chatbot_widget import render_ai_banner, render_sidebar_chat
+
+# ---- DISCLAIMER ----
+render_disclaimer("Climate Projections Simulator")  # change context per page
 
 # at the very bottom of each page:
 render_sidebar_chat("Climate Projections")  # change context per page

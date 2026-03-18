@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from chatbot_widget import render_ai_banner
+from chatbot_widget import render_ai_banner, render_sidebar_chat, render_disclaimer
 
 # ---- PAGE CONFIG ----
 st.set_page_config(page_title="Global Climate Dashboard", layout="wide")
@@ -73,23 +73,23 @@ def load_data():
 
 df = load_data()
 
-# ---- EXCLUDE AGGREGATES ----
-exclude = [
-    'World', 'Asia', 'Europe', 'Africa', 'Oceania',
-    'North America', 'South America', 'Antarctic',
-    'European Union (27)', 'High-income countries',
-    'Low-income countries', 'Upper-middle-income countries',
-    'Lower-middle-income countries', 'International transport'
-]
-countries_df = df[~df['country'].isin(exclude)]
+# ---- SMART COUNTRY FILTER ----
+# Only keep rows where iso_code is a valid 3-letter country code
+# This eliminates ALL aggregates, regions, income groups automatically
+@st.cache_data
+def get_real_countries(df):
+    real = df[df['iso_code'].notna() & (df['iso_code'].str.len() == 3) & (~df['iso_code'].str.startswith('OWID'))]
+    return sorted(real['country'].dropna().unique().tolist())
+
+real_countries = get_real_countries(df)
+countries_df = df[df['country'].isin(real_countries)]
 
 # ---- SIDEBAR FILTERS ----
 st.sidebar.header("Filters")
 
-countries = sorted(countries_df['country'].dropna().unique().tolist())
 selected_countries = st.sidebar.multiselect(
     "Select Countries",
-    options=countries,
+    options=real_countries,
     default=["United States", "China", "India", "United Kingdom", "Germany"]
 )
 
@@ -183,7 +183,9 @@ st.download_button(
 if st.checkbox("Show raw data"):
     st.dataframe(filtered_df[['country', 'year', 'co2', 'co2_per_capita']].reset_index(drop=True))
 
-from chatbot_widget import render_ai_banner, render_sidebar_chat
+# ---- DISCLAIMER ----
+render_disclaimer("CO₂ Emissions")  # change context per page
 
-# at the very bottom of each page:
-render_sidebar_chat("CO₂ Emissions")  # change context per page
+# ---- SIDEBAR CHAT ----
+render_sidebar_chat("CO₂ Emissions")
+
