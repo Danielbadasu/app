@@ -201,3 +201,8 @@ if st.checkbox("Show raw data"):
         filtered_df[['country', 'year', 'solar_electricity', 'wind_electricity',
                      'fossil_electricity', 'renewables_share_energy']].reset_index(drop=True)
     )
+
+from chatbot_widget import render_ai_banner, render_sidebar_chat
+
+# at the very bottom of each page:
+render_sidebar_chat("Renewable Energy")  # change context per page

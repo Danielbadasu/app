@@ -372,3 +372,8 @@ st.download_button(
     file_name=f"climate_simulation_{scenario}_{target_year}.csv",
     mime="text/csv"
 )
+
+from chatbot_widget import render_ai_banner, render_sidebar_chat
+
+# at the very bottom of each page:
+render_sidebar_chat("Climate Projections")  # change context per page

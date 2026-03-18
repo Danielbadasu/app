@@ -1,11 +1,8 @@
 import streamlit as st
+from groq import Groq
 
 def render_ai_banner(page_context: str):
-    """
-    Renders a glowing CTA banner that redirects to the AI Assistant page.
-    page_context: short string describing the current page e.g. 'CO₂ Emissions'
-    """
-
+    """Renders a glowing CTA banner on each page."""
     st.markdown(f"""
     <style>
     .ai-banner {{
@@ -18,7 +15,6 @@ def render_ai_banner(page_context: str):
         align-items: center;
         justify-content: space-between;
         margin-bottom: 28px;
-        box-shadow: 0 0 30px rgba(168, 85, 247, 0.15);
         animation: glowpulse 3s ease-in-out infinite;
     }}
     @keyframes glowpulse {{
@@ -56,7 +52,6 @@ def render_ai_banner(page_context: str):
         cursor: pointer;
     }}
     </style>
-
     <div class="ai-banner">
         <div class="ai-banner-text">
             <div class="ai-banner-title">Want deeper insights on {page_context}?</div>
@@ -65,3 +60,66 @@ def render_ai_banner(page_context: str):
         <a class="ai-banner-btn" href="/AI_Assistant" target="_self">💬 Ask AI Assistant →</a>
     </div>
     """, unsafe_allow_html=True)
+
+
+def render_sidebar_chat(page_context: str):
+    """
+    Renders a mini AI chat panel in the sidebar.
+    Call this at the bottom of any page file.
+    """
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 💬 Quick AI Chat")
+    st.sidebar.markdown(f"*Ask anything about {page_context}*")
+
+    # Session state keys unique per page to avoid conflicts
+    chat_key = f"sidebar_messages_{page_context}"
+    if chat_key not in st.session_state:
+        st.session_state[chat_key] = []
+
+    # Display chat history in sidebar
+    for msg in st.session_state[chat_key]:
+        if msg["role"] == "user":
+            st.sidebar.markdown(f"**You:** {msg['content']}")
+        else:
+            st.sidebar.markdown(f"**🌍 AI:** {msg['content']}")
+
+    # Input
+    user_input = st.sidebar.text_input(
+        "Ask a question...",
+        key=f"sidebar_input_{page_context}",
+        label_visibility="collapsed",
+        placeholder="Ask a question..."
+    )
+
+    col1, col2 = st.sidebar.columns([2, 1])
+    with col1:
+        send = st.button("Send ➤", key=f"sidebar_send_{page_context}", use_container_width=True)
+    with col2:
+        if st.button("Clear", key=f"sidebar_clear_{page_context}", use_container_width=True):
+            st.session_state[chat_key] = []
+            st.rerun()
+
+    if send and user_input.strip():
+        st.session_state[chat_key].append({"role": "user", "content": user_input})
+
+        client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+        with st.sidebar:
+            with st.spinner("Thinking..."):
+                response = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": f"""You are an expert climate data analyst embedded in a 
+                            Global Climate Intelligence Dashboard. The user is currently viewing 
+                            the {page_context} page. Give concise, insightful answers — 
+                            2-3 sentences max for sidebar chat. Be data-driven and direct."""
+                        }
+                    ] + [
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state[chat_key]
+                    ]
+                )
+        reply = response.choices[0].message.content
+        st.session_state[chat_key].append({"role": "assistant", "content": reply})
+        st.rerun()

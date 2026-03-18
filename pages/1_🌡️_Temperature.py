@@ -224,3 +224,8 @@ st.download_button(
 # ---- RAW DATA ----
 if st.checkbox("Show raw data"):
     st.dataframe(filtered_df[['entity', 'year', 'anomaly']].reset_index(drop=True))
+
+from chatbot_widget import render_ai_banner, render_sidebar_chat
+
+# at the very bottom of each page:
+render_sidebar_chat("Temperature Anomalies")  # change context per page
