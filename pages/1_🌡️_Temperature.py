@@ -60,19 +60,18 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("🌡️ Global Temperature Anomalies")
-st.markdown("Tracking how surface temperatures have changed country by country since 1961.")
+st.markdown("Tracking how land surface temperatures have changed by country since 1743.")
 
 # ---- LOAD DATA ----
 @st.cache_data
 def load_temp_data():
-    url = "https://raw.githubusercontent.com/owid/owid-datasets/master/datasets/Annual%20average%20surface%20temperatures%20by%20country/Annual%20average%20surface%20temperatures%20by%20country.csv"
+    url = "https://raw.githubusercontent.com/gindeleo/climate/master/GlobalLandTemperaturesByCountry.csv"
     df = pd.read_csv(url)
-    df.columns = [c.strip() for c in df.columns]
-    df = df.rename(columns={
-        df.columns[0]: "country",
-        df.columns[1]: "year",
-        df.columns[2]: "temperature"
-    })
+    df['dt'] = pd.to_datetime(df['dt'])
+    df['year'] = df['dt'].dt.year
+    df = df.groupby(['Country', 'year'])['AverageTemperature'].mean().reset_index()
+    df.columns = ['country', 'year', 'temperature']
+    df = df.dropna(subset=['temperature'])
     return df
 
 df = load_temp_data()
@@ -84,7 +83,7 @@ continent_map = {
                'Burkina Faso', 'Mali', 'Malawi', 'Zambia', 'Chad', 'Somalia',
                'Zimbabwe', 'Guinea', 'Rwanda', 'Benin', 'Burundi', 'Tunisia',
                'South Africa', 'Egypt', 'Algeria', 'Morocco', 'Sudan',
-               'Democratic Republic of Congo', 'Ivory Coast', 'Senegal'],
+               'Congo (Democratic Republic Of The)', 'Côte D\'Ivoire', 'Senegal'],
     'Asia': ['China', 'India', 'Indonesia', 'Pakistan', 'Bangladesh',
              'Japan', 'Philippines', 'Vietnam', 'Iran', 'Thailand',
              'Myanmar', 'South Korea', 'Iraq', 'Afghanistan', 'Saudi Arabia',
@@ -96,12 +95,12 @@ continent_map = {
                'Belgium', 'Sweden', 'Czech Republic', 'Greece', 'Portugal',
                'Hungary', 'Belarus', 'Austria', 'Switzerland', 'Bulgaria',
                'Denmark', 'Finland', 'Norway', 'Slovakia', 'Ireland',
-               'Croatia', 'Bosnia and Herzegovina', 'Albania', 'Lithuania'],
+               'Croatia', 'Bosnia And Herzegovina', 'Albania', 'Lithuania'],
     'Americas': ['United States', 'Brazil', 'Mexico', 'Colombia', 'Argentina',
                  'Canada', 'Peru', 'Venezuela', 'Chile', 'Ecuador',
                  'Bolivia', 'Paraguay', 'Uruguay', 'Cuba', 'Haiti',
                  'Dominican Republic', 'Honduras', 'Guatemala', 'El Salvador',
-                 'Nicaragua', 'Costa Rica', 'Panama', 'Jamaica', 'Trinidad and Tobago'],
+                 'Nicaragua', 'Costa Rica', 'Panama', 'Jamaica', 'Trinidad And Tobago'],
     'Oceania': ['Australia', 'Papua New Guinea', 'New Zealand', 'Fiji',
                 'Solomon Islands', 'Vanuatu', 'Samoa', 'Kiribati', 'Tonga']
 }
@@ -135,7 +134,8 @@ else:
 selected_countries = st.sidebar.multiselect(
     "Select Countries",
     options=country_options,
-    default=country_options[:3] if len(country_options) >= 3 else country_options
+    default=["United States", "China", "India", "United Kingdom", "Germany"] if selected_continent == 'All'
+    else country_options[:3]
 )
 
 if not selected_countries:
@@ -145,7 +145,7 @@ year_range = st.sidebar.slider(
     "Select Year Range",
     min_value=int(df['year'].min()),
     max_value=int(df['year'].max()),
-    value=(int(df['year'].min()), int(df['year'].max()))
+    value=(1900, int(df['year'].max()))
 )
 
 st.sidebar.markdown("---")
@@ -200,13 +200,13 @@ render_ai_banner("Temperature Anomalies")
 st.markdown("---")
 
 # ---- LINE CHART ----
-st.subheader("Average Surface Temperature Over Time")
+st.subheader("Average Land Temperature Over Time")
 fig1 = px.line(
     filtered_df,
     x="year",
     y="temperature",
     color="country",
-    labels={"temperature": "Avg Surface Temp (°C)", "year": "Year", "country": "Country"},
+    labels={"temperature": "Avg Land Temp (°C)", "year": "Year", "country": "Country"},
     template="plotly_dark"
 )
 st.plotly_chart(fig1, use_container_width=True)
