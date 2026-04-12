@@ -65,7 +65,7 @@ st.markdown("""
     margin-bottom: 32px;
 }
 .overview-title {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
