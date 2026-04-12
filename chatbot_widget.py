@@ -162,13 +162,12 @@ def render_sidebar_chat(page_context: str):
 
         for idx, (user_msg, ai_msg) in enumerate(exchanges):
             label = f"🗨️ {user_msg[:35]}{'...' if len(user_msg) > 35 else ''}"
-            # Only latest exchange is expanded
             with st.sidebar.expander(label, expanded=(idx == len(exchanges) - 1)):
                 st.markdown(f"**You:** {user_msg}")
                 if ai_msg:
                     st.markdown(f"**🌍 Climate AI:** {ai_msg}")
 
-    # ---- INPUT FORM ----
+    # ---- INPUT FORM WITH BUTTONS INSIDE ----
     with st.sidebar.form(key=f"chat_form_{page_context}", clear_on_submit=True):
         st.markdown(
             "<p style='font-size:11px;color:rgba(255,255,255,0.35);margin:0 0 4px 0;'>"
@@ -181,7 +180,7 @@ def render_sidebar_chat(page_context: str):
             placeholder="Type your question here...",
             height=100,
         )
-        col1, col2 = st.sidebar.columns([2, 1])
+        col1, col2 = st.columns([2, 1])
         with col1:
             send = st.form_submit_button("Send ➤", use_container_width=True)
         with col2:
