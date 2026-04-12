@@ -101,7 +101,7 @@ st.markdown("""
     margin-bottom: 4px;
 }
 .overview-item-desc {
-    font-size: 14px;
+    font-size: 15px;
     color: rgba(255,255,255,0.55);
     line-height: 1.5;
 }
