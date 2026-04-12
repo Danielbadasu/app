@@ -117,11 +117,20 @@ st.markdown("""
 <div class="overview-container">
     <div class="overview-title">📌 Project Overview</div>
     <div class="overview-text">
-        The Global Climate Intelligence Dashboard is an open-access data platform designed to make 
-        climate science accessible, interactive, and actionable. Built for policymakers, researchers, 
-        institutions, and informed citizens, it transforms complex global datasets into clear visual 
-        insights, enabling evidence-based understanding of the climate crisis without requiring 
-        technical expertise.
+        The Global Climate Intelligence Dashboard is an open-access intelligence platform built 
+        to close the gap between raw climate data and real-world decision-making. In a world where 
+        climate policy moves faster than public understanding, this platform ensures that policymakers, 
+        researchers, institutions, and development organizations have immediate, interactive access 
+        to the data that matters most.
+        <br><br>
+        Built on verified public datasets from Our World in Data, Berkeley Earth, and the Hadley Centre, 
+        the dashboard translates decades of complex climate science into clear, filterable, and 
+        downloadable insights across five critical dimensions: CO₂ emissions by country, surface 
+        temperature trends, renewable energy transition, climate vulnerability, and future scenario 
+        projections.
+        <br><br>
+        No technical expertise required. No data science background needed. Just the right questions 
+        and the answers are already here.
     </div>
     <div class="overview-grid">
         <div class="overview-item">
@@ -142,7 +151,7 @@ st.markdown("""
         <div class="overview-item">
             <div class="overview-item-icon">🌎</div>
             <div class="overview-item-title">Climate Vulnerability</div>
-            <div class="overview-item-desc">Identify which countries face the greatest climate risk — and who bears the least responsibility for it.</div>
+            <div class="overview-item-desc">Identify which countries face the greatest climate risk and who bears the least responsibility for it.</div>
         </div>
         <div class="overview-item">
             <div class="overview-item-icon">🔮</div>
