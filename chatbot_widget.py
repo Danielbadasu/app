@@ -97,7 +97,7 @@ def render_disclaimer(page_context: str = ""):
 
 
 def render_sidebar_chat(page_context: str):
-    """Renders a mini AI chat panel in the sidebar."""
+    """Renders a styled AI chat panel in the sidebar."""
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 💬 Quick AI Chat")
     st.sidebar.markdown(f"*Ask anything about {page_context}*")
@@ -106,17 +106,47 @@ def render_sidebar_chat(page_context: str):
     if chat_key not in st.session_state:
         st.session_state[chat_key] = []
 
+    # ---- DISPLAY CHAT BUBBLES ----
     for msg in st.session_state[chat_key]:
         if msg["role"] == "user":
-            st.sidebar.markdown(f"**You:** {msg['content']}")
+            st.sidebar.markdown(f"""
+<div style="
+    background: linear-gradient(135deg, #6a11cb, #a855f7);
+    border-radius: 12px 12px 2px 12px;
+    padding: 10px 14px;
+    margin: 6px 0 2px 20px;
+    font-size: 13px;
+    color: #ffffff;
+    line-height: 1.5;
+">
+<span style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.7;">You</span><br>
+{msg['content']}
+</div>
+""", unsafe_allow_html=True)
         else:
-            st.sidebar.markdown(f"**🌍 AI:** {msg['content']}")
+            st.sidebar.markdown(f"""
+<div style="
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px solid rgba(168,85,247,0.25);
+    border-radius: 12px 12px 12px 2px;
+    padding: 10px 14px;
+    margin: 2px 20px 6px 0;
+    font-size: 13px;
+    color: rgba(255,255,255,0.88);
+    line-height: 1.6;
+">
+<span style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#38ef7d;">🌍 Climate AI</span><br>
+{msg['content']}
+</div>
+""", unsafe_allow_html=True)
 
-    user_input = st.sidebar.text_input(
+    # ---- INPUT BOX ----
+    user_input = st.sidebar.text_area(
         "Ask a question...",
         key=f"sidebar_input_{page_context}",
         label_visibility="collapsed",
-        placeholder="Ask a question..."
+        placeholder="Ask a climate question...",
+        height=80
     )
 
     col1, col2 = st.sidebar.columns([2, 1])

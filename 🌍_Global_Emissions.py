@@ -57,12 +57,106 @@ st.markdown("""
     font-size: 42px;
     opacity: 0.25;
 }
+.overview-container {
+    background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(14,165,233,0.08));
+    border: 1px solid rgba(168,85,247,0.25);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 32px;
+}
+.overview-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #a855f7;
+    margin-bottom: 12px;
+}
+.overview-text {
+    font-size: 15px;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.8;
+    margin-bottom: 20px;
+}
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 8px;
+}
+.overview-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.overview-item-icon {
+    font-size: 20px;
+    margin-bottom: 6px;
+}
+.overview-item-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+.overview-item-desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ---- TITLE ----
 st.title("🌍 Global Climate Intelligence Dashboard")
 st.markdown("Exploring CO₂ emissions and climate trends using public data.")
+
+# ---- PROJECT OVERVIEW ----
+st.markdown("""
+<div class="overview-container">
+    <div class="overview-title">📌 Project Overview</div>
+    <div class="overview-text">
+        The Global Climate Intelligence Dashboard is an open-access data platform designed to make 
+        climate science accessible, interactive, and actionable. Built for policymakers, researchers, 
+        institutions, and informed citizens, it transforms complex global datasets into clear visual 
+        insights — enabling evidence-based understanding of the climate crisis without requiring 
+        technical expertise.
+    </div>
+    <div class="overview-grid">
+        <div class="overview-item">
+            <div class="overview-item-icon">🌍</div>
+            <div class="overview-item-title">CO₂ Emissions</div>
+            <div class="overview-item-desc">Track emissions by country and per capita across time to understand who contributes most to global warming.</div>
+        </div>
+        <div class="overview-item">
+            <div class="overview-item-icon">🌡️</div>
+            <div class="overview-item-title">Temperature Trends</div>
+            <div class="overview-item-desc">Explore how land surface temperatures have shifted country by country since the 18th century.</div>
+        </div>
+        <div class="overview-item">
+            <div class="overview-item-icon">⚡</div>
+            <div class="overview-item-title">Renewable Energy</div>
+            <div class="overview-item-desc">Monitor the global transition from fossil fuels to clean energy sources across nations.</div>
+        </div>
+        <div class="overview-item">
+            <div class="overview-item-icon">🌎</div>
+            <div class="overview-item-title">Climate Vulnerability</div>
+            <div class="overview-item-desc">Identify which countries face the greatest climate risk — and who bears the least responsibility for it.</div>
+        </div>
+        <div class="overview-item">
+            <div class="overview-item-icon">🔮</div>
+            <div class="overview-item-title">Scenario Simulator</div>
+            <div class="overview-item-desc">Project future CO₂ and temperature trends to 2100 under optimistic, moderate, and pessimistic scenarios.</div>
+        </div>
+        <div class="overview-item">
+            <div class="overview-item-icon">🤖</div>
+            <div class="overview-item-title">AI Assistant</div>
+            <div class="overview-item-desc">Ask climate questions in plain language and get instant, data-driven answers powered by AI.</div>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ---- LOAD DATA ----
 @st.cache_data
