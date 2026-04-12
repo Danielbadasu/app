@@ -95,13 +95,13 @@ st.markdown("""
     margin-bottom: 6px;
 }
 .overview-item-title {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
     color: #ffffff;
     margin-bottom: 4px;
 }
 .overview-item-desc {
-    font-size: 12px;
+    font-size: 14px;
     color: rgba(255,255,255,0.55);
     line-height: 1.5;
 }
