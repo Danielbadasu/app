@@ -73,7 +73,7 @@ st.markdown("""
     margin-bottom: 12px;
 }
 .overview-text {
-    font-size: 15px;
+    font-size: 17px;
     color: rgba(255,255,255,0.8);
     line-height: 1.8;
     margin-bottom: 20px;
@@ -120,7 +120,7 @@ st.markdown("""
         The Global Climate Intelligence Dashboard is an open-access data platform designed to make 
         climate science accessible, interactive, and actionable. Built for policymakers, researchers, 
         institutions, and informed citizens, it transforms complex global datasets into clear visual 
-        insights — enabling evidence-based understanding of the climate crisis without requiring 
+        insights, enabling evidence-based understanding of the climate crisis without requiring 
         technical expertise.
     </div>
     <div class="overview-grid">

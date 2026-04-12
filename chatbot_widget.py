@@ -1,6 +1,43 @@
 import streamlit as st
 from groq import Groq
 
+CLIMATE_CONTEXT = """
+You are an expert climate data analyst embedded inside the Global Climate Intelligence Dashboard.
+You have deep expertise in:
+
+- CO₂ emissions trends by country and sector
+- Global temperature anomalies and climate science
+- Renewable energy transition (solar, wind, fossil fuels)
+- Climate vulnerability and environmental policy
+- Climate scenario projections and the Paris Agreement
+
+Key facts you know:
+- Global CO₂ emissions reached ~37 billion tonnes in 2022
+- China is the largest emitter (~31% of global emissions)
+- The Paris Agreement targets limiting warming to 1.5°C above pre-industrial levels
+- Renewable energy now accounts for ~30% of global electricity generation
+- The most climate-vulnerable countries are often the lowest emitters
+
+Be concise, data-driven, and always relate answers back to the dashboard data where relevant.
+"""
+
+GLOBAL_CSS = """
+<style>
+div[data-testid="stSidebarContent"] textarea:focus::placeholder { color: transparent !important; }
+div[data-testid="stSidebarContent"] textarea::placeholder {
+    color: rgba(255,255,255,0.25) !important; font-style: italic;
+}
+div[data-testid="stSidebarContent"] textarea { min-height: 80px !important; resize: vertical !important; }
+</style>
+"""
+
+
+def get_groq_client():
+    try:
+        return Groq(api_key=st.secrets["GROQ_API_KEY"])
+    except Exception:
+        return None
+
 
 def render_ai_banner(page_context: str):
     """Renders a glowing CTA banner on each page."""
@@ -97,7 +134,8 @@ def render_disclaimer(page_context: str = ""):
 
 
 def render_sidebar_chat(page_context: str):
-    """Renders a styled AI chat panel in the sidebar."""
+    """Renders a collapsible AI chat panel in the sidebar."""
+    st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 💬 Quick AI Chat")
     st.sidebar.markdown(f"*Ask anything about {page_context}*")
@@ -106,61 +144,56 @@ def render_sidebar_chat(page_context: str):
     if chat_key not in st.session_state:
         st.session_state[chat_key] = []
 
-    # ---- DISPLAY CHAT BUBBLES ----
-    for msg in st.session_state[chat_key]:
-        if msg["role"] == "user":
-            st.sidebar.markdown(f"""
-<div style="
-    background: linear-gradient(135deg, #6a11cb, #a855f7);
-    border-radius: 12px 12px 2px 12px;
-    padding: 10px 14px;
-    margin: 6px 0 2px 20px;
-    font-size: 13px;
-    color: #ffffff;
-    line-height: 1.5;
-">
-<span style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.7;">You</span><br>
-{msg['content']}
-</div>
-""", unsafe_allow_html=True)
-        else:
-            st.sidebar.markdown(f"""
-<div style="
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 1px solid rgba(168,85,247,0.25);
-    border-radius: 12px 12px 12px 2px;
-    padding: 10px 14px;
-    margin: 2px 20px 6px 0;
-    font-size: 13px;
-    color: rgba(255,255,255,0.88);
-    line-height: 1.6;
-">
-<span style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#38ef7d;">🌍 Climate AI</span><br>
-{msg['content']}
-</div>
-""", unsafe_allow_html=True)
+    # ---- DISPLAY EXCHANGES AS COLLAPSIBLE ITEMS ----
+    if st.session_state[chat_key]:
+        msgs = st.session_state[chat_key]
+        exchanges = []
+        i = 0
+        while i < len(msgs):
+            user_msg = msgs[i]['content'] if msgs[i]['role'] == 'user' else None
+            ai_msg = (
+                msgs[i + 1]['content']
+                if (i + 1 < len(msgs) and msgs[i + 1]['role'] == 'assistant')
+                else None
+            )
+            if user_msg:
+                exchanges.append((user_msg, ai_msg))
+            i += 2
 
-    # ---- INPUT BOX ----
-    user_input = st.sidebar.text_area(
-        "Ask a question...",
-        key=f"sidebar_input_{page_context}",
-        label_visibility="collapsed",
-        placeholder="Ask a climate question...",
-        height=80
-    )
+        for idx, (user_msg, ai_msg) in enumerate(exchanges):
+            label = f"🗨️ {user_msg[:35]}{'...' if len(user_msg) > 35 else ''}"
+            # Only latest exchange is expanded
+            with st.sidebar.expander(label, expanded=(idx == len(exchanges) - 1)):
+                st.markdown(f"**You:** {user_msg}")
+                if ai_msg:
+                    st.markdown(f"**🌍 Climate AI:** {ai_msg}")
 
-    col1, col2 = st.sidebar.columns([2, 1])
-    with col1:
-        send = st.button("Send ➤", key=f"sidebar_send_{page_context}", use_container_width=True)
-    with col2:
-        if st.button("Clear", key=f"sidebar_clear_{page_context}", use_container_width=True):
-            st.session_state[chat_key] = []
-            st.rerun()
+    # ---- INPUT FORM ----
+    with st.sidebar.form(key=f"chat_form_{page_context}", clear_on_submit=True):
+        st.markdown(
+            "<p style='font-size:11px;color:rgba(255,255,255,0.35);margin:0 0 4px 0;'>"
+            "Ctrl+Enter to send</p>",
+            unsafe_allow_html=True
+        )
+        user_input = st.text_area(
+            "message",
+            label_visibility="collapsed",
+            placeholder="Type your question here...",
+            height=100,
+        )
+        col1, col2 = st.sidebar.columns([2, 1])
+        with col1:
+            send = st.form_submit_button("Send ➤", use_container_width=True)
+        with col2:
+            clear = st.form_submit_button("Clear", use_container_width=True)
+
+    if clear:
+        st.session_state[chat_key] = []
+        st.rerun()
 
     if send and user_input.strip():
         st.session_state[chat_key].append({"role": "user", "content": user_input})
-
-        client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+        client = get_groq_client()
         with st.sidebar:
             with st.spinner("Thinking..."):
                 response = client.chat.completions.create(
@@ -168,10 +201,11 @@ def render_sidebar_chat(page_context: str):
                     messages=[
                         {
                             "role": "system",
-                            "content": f"""You are an expert climate data analyst embedded in a
-                            Global Climate Intelligence Dashboard. The user is currently viewing
-                            the {page_context} page. Give concise, insightful answers —
-                            2-3 sentences max for sidebar chat. Be data-driven and direct."""
+                            "content": (
+                                CLIMATE_CONTEXT
+                                + f"\nThe user is currently viewing the {page_context} page. "
+                                "Give concise answers — 2-3 sentences max for sidebar chat."
+                            )
                         }
                     ] + [
                         {"role": m["role"], "content": m["content"]}
